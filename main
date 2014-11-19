@@ -1,0 +1,27 @@
+#http://qq.readthedocs.org/en/latest/
+import pygame
+
+#map
+maze=[]
+f=open("level.txt")
+for i in f:
+    maze.append(list(i.strip('\n')))
+
+#pygame
+pygame.init()
+screen = pygame.display.set_mode( (1280, 960) )
+pygame.display.set_caption("Minu esimene aken")
+
+#joonistamine
+tile=pygame.image.load("tile.png")
+for i in range(9):
+    for j in range(9):
+        if maze[j][i]=="#":
+            screen.blit(tile,(i*60,j*60))
+
+pygame.display.flip()
+while True:
+    event = pygame.event.poll()
+    if event.type == pygame.QUIT:
+        break
+pygame.quit()
