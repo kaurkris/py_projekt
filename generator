@@ -1,0 +1,139 @@
+from random import *
+
+def connected(a,b,d):
+    global M
+    if a+d[0]<0 or b+d[1]<0:
+        return False
+    try:
+        if M[a+d[0]][b+d[1]]!=0:
+            return True
+        else:
+            return False
+    except:
+        return False
+
+def islegit(a,b):
+    global M
+    if a<0:
+        return False
+    if a>=mapsize:
+        return False
+    if b<0:
+        return False
+    if b>=mapsize:
+        return False
+    try:
+        if M[a+1][b+1]!=0 and M[a+1][b]!=0 and M[a][b+1]!=0:
+            return False
+    except:
+        pass
+    try:
+        if b!=0 and M[a+1][b-1]!=0 and M[a+1][b]!=0 and M[a][b-1]!=0:
+            return False
+    except:
+        pass
+    try:
+        if a!=0 and M[a-1][b+1]!=0 and M[a-1][b]!=0 and M[a][b+1]!=0:
+            return False
+    except:
+        pass
+    try:
+        if a!=0 and b!=0 and M[a-1][b-1]!=0 and M[a-1][b]!=0 and M[a][b-1]!=0:
+            return False
+    except:
+        pass
+    return True
+
+def move():
+    global D
+    global h
+    shuffle(D)
+    #vaatab, kas juba on ühendus tekkinud
+    for i in D:
+        if i!=h and h!=None and connected(a,b,i):
+            return i
+    #liigub mingis suunas
+    for i in D:
+        if i!=h and islegit(a+i[0],b+i[1]):
+            h=(-i[0],-i[1])
+            return i
+    return None
+
+def initiate():
+    global M
+    global D
+    for i in range(mapsize):
+        for j in range(mapsize):
+            if M[i][j]==0 and islegit(i,j):
+                t=0
+                for k in D:
+                    if connected(i,j,k):
+                        t=1
+                if t!=1:
+                    return (i,j)
+    return None
+
+h=None #suunamälu
+history=[] #teekonnamälu
+D=[(0,1),(1,0),(0,-1),(-1,0)]
+mapsize=70
+M=[]
+
+for i in range(mapsize):
+    t=[]
+    for j in range(mapsize):
+        t.append(0)
+    M.append(t)
+    
+M[0][0]=2
+
+#generate
+while 1:
+    x=initiate()
+    if x==None:
+        break
+    a=x[0]
+    b=x[1]
+    while 1:
+        while M[a][b]==0:
+            M[a][b]=1
+            history.append((a,b))
+            direction=move()
+            if direction==None:
+                if len(history)==1:
+                    M[a][b]=3
+                    history=[]
+                else:
+                    for i in history:
+                        M[i[0]][i[1]]=0
+                        history=[]
+                break
+            else:
+                a+=direction[0]
+                b+=direction[1]
+        #kui on kinnitamata punkt, kustutab vahepealse silmuse
+        if M[a][b]==1:
+            t=0
+            newh=[]
+            for i in history:
+                if i==(a,b):
+                    t=1
+                if t==1:
+                    M[i[0]][i[1]]=0
+                else:
+                    newh.append(i)
+            history=newh
+            h=None
+            continue
+        #kui on kinnitatud punkt, loob uue pinna
+        elif M[a][b]==2:
+            #input("bulid")
+            for i in history:
+                M[i[0]][i[1]]=2
+            history=[]
+            h=None
+        break
+
+for i in M:
+    print(i)
+
