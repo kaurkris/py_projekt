@@ -2,12 +2,12 @@ from random import *
 import pygame
 from pygame.locals import *
 
-mapsize=10
+mapsize=50
 
 #pygame
 
 pygame.init()
-screen = pygame.display.set_mode( (mapsize*40, mapsize*40) )
+screen = pygame.display.set_mode( (600,600) )
 pygame.display.set_caption("the game")
 clock = pygame.time.Clock()
 FPS=120
@@ -120,8 +120,8 @@ dx,dy=0,0
 #esimene klots
 M[x][y]=2
 #teisendamine piksliteks
-x=x*40+10
-y=y*40+10
+x=x*40
+y=y*40
 
 #generate
 while 1:
@@ -173,19 +173,19 @@ while 1:
 
 #############################################
 #background
-screen.fill((0,0,0))
-for i in range(mapsize):
-    for j in range(mapsize):
-        if M[i][j]==2:
-            screen.blit(tile,(i*40,j*40))
-pygame.display.flip()
+##screen.fill((0,0,0))
+##for i in range(mapsize):
+##    for j in range(mapsize):
+##        if M[i][j]==2:
+##            screen.blit(tile,(i*40,j*40))
+##pygame.display.flip()
 
 ##############################################
 
 while True:
 
     clock.tick(FPS)
-    
+    #mängja liikumine
     event = pygame.event.poll()
     if event.type == pygame.QUIT:
         break
@@ -219,11 +219,20 @@ while True:
         x+=dx
     if yok==1:
         y+=dy
-    for i in range(mapsize):
-        for j in range(mapsize):
-            if M[i][j]==2:
-                screen.blit(tile,(i*40,j*40))
-    screen.blit(tile2,(x,y))
+    #tulemuse kuvamine
+    screen.fill((0,0,0))
+    for i in range(15):
+        a=x//40-7+i
+        if a>=0 and a<mapsize:
+            for j in range(15):
+                b=y//40-7+j
+                if b>=0 and b<mapsize and M[a][b]==2:
+                    screen.blit(tile,(i*40-x%40+30,j*40-y%40+30))
+    screen.blit(tile2,(310,310))
+    screen.fill((0,0,0),(0,0,40,600))
+    screen.fill((0,0,0),(0,0,600,40))
+    screen.fill((0,0,0),(560,0,40,600))
+    screen.fill((0,0,0),(0,560,600,40))
     pygame.display.flip()
     
 pygame.quit()
