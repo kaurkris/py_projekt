@@ -1,22 +1,27 @@
 from random import *
 import pygame
+from pygame.locals import *
+
+mapsize=10
 
 #pygame
 
 pygame.init()
-screen = pygame.display.set_mode( (700, 700) )
-pygame.display.set_caption("Minu esimene aken")
+screen = pygame.display.set_mode( (mapsize*40, mapsize*40) )
+pygame.display.set_caption("the game")
+clock = pygame.time.Clock()
+FPS=120
 
 #joonistamine
 tile=pygame.image.load("tile.png")
 tile2=pygame.image.load("tile2.png")
 
 ###################################
+#Wilson
 
 h=None #suunamälu
 history=[] #teekonnamälu
 D=[(0,1),(1,0),(0,-1),(-1,0)]
-mapsize=70
 M=[]
 
 def connected(a,b,d):
@@ -67,14 +72,14 @@ def move():
     global D
     global h
     global M
-    screen.fill((0,0,0))
-    for i in range(mapsize):
-        for j in range(mapsize):
-            if M[i][j]==2:
-                screen.blit(tile,(i*10,j*10))
-            elif M[i][j]==1:
-                screen.blit(tile2,(i*10,j*10))
-    pygame.display.flip()
+##    screen.fill((0,0,0))
+##    for i in range(mapsize):
+##        for j in range(mapsize):
+##            if M[i][j]==2:
+##                screen.blit(tile,(i*10,j*10))
+##            elif M[i][j]==1:
+##                screen.blit(tile2,(i*10,j*10))
+##    pygame.display.flip()
     shuffle(D)
     #vaatab, kas juba on ühendus tekkinud
     for i in D:
@@ -106,16 +111,25 @@ for i in range(mapsize):
     for j in range(mapsize):
         t.append(0)
     M.append(t)
-    
-M[0][0]=2
+
+#arbitraarne alguspunkt
+x=randint(0,mapsize-1)
+y=randint(0,mapsize-1)
+#hilisemaks liikumiseks
+dx,dy=0,0
+#esimene klots
+M[x][y]=2
+#teisendamine piksliteks
+x=x*40+10
+y=y*40+10
 
 #generate
 while 1:
-    x=initiate()
-    if x==None:
+    f=initiate()
+    if f==None:
         break
-    a=x[0]
-    b=x[1]
+    a=f[0]
+    b=f[1]
     while 1:
         while M[a][b]==0:
             M[a][b]=1
@@ -123,8 +137,9 @@ while 1:
             direction=move()
             if direction==None:
                 if len(history)<5:
-                    M[a][b]=3
-                    history=[]
+                    for i in history:
+                        M[i[0]][i[1]]=3
+                        history=[]
                 else:
                     for i in history:
                         M[i[0]][i[1]]=0
@@ -156,17 +171,59 @@ while 1:
             h=None
         break
 
-############################################
-
+#############################################
+#background
 screen.fill((0,0,0))
 for i in range(mapsize):
     for j in range(mapsize):
         if M[i][j]==2:
-            screen.blit(tile,(i*10,j*10))
+            screen.blit(tile,(i*40,j*40))
 pygame.display.flip()
 
+##############################################
+
 while True:
+
+    clock.tick(FPS)
+    
     event = pygame.event.poll()
     if event.type == pygame.QUIT:
         break
+    if event.type == pygame.KEYDOWN:
+        if event.key==K_w:
+            dy=-1
+        if event.key==K_s:
+            dy=1
+        if event.key==K_d:
+            dx=1
+        if event.key==K_a:
+            dx=-1
+    if event.type == pygame.KEYUP:
+        if event.key==K_w:
+            dy=0
+        if event.key==K_s:
+            dy=0
+        if event.key==K_d:
+            dx=0
+        if event.key==K_a:
+            dx=0
+    nurgad=((x,y),(x+19,y),(x,y+19),(x+19,y+19))
+    xok=1
+    yok=1
+    for i in nurgad:
+        if i[0]+dx<0 or i[0]+dx>=mapsize*40 or M[(i[0]+dx)//40][i[1]//40]!=2:
+            xok=0
+        if i[1]+dy<0 or i[1]+dy>=mapsize*40 or M[i[0]//40][(i[1]+dy)//40]!=2:
+            yok=0
+    if xok==1:
+        x+=dx
+    if yok==1:
+        y+=dy
+    for i in range(mapsize):
+        for j in range(mapsize):
+            if M[i][j]==2:
+                screen.blit(tile,(i*40,j*40))
+    screen.blit(tile2,(x,y))
+    pygame.display.flip()
+    
 pygame.quit()
