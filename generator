@@ -13,8 +13,9 @@ clock = pygame.time.Clock()
 FPS=120
 
 #joonistamine
-tile=pygame.image.load("tile.png")
-tile2=pygame.image.load("tile2.png")
+tile=pygame.image.load("Floor-Tile-1.png")
+tile2=pygame.image.load("Standing-MC-2.png")
+tile3=pygame.image.load("Zombo-Standing-1.png")
 
 ###################################
 #Wilson
@@ -120,8 +121,8 @@ dx,dy=0,0
 #esimene klots
 M[x][y]=2
 #teisendamine piksliteks
-x=x*40
-y=y*40
+x=x*40+10
+y=y*40+10
 
 #generate
 while 1:
@@ -182,6 +183,34 @@ while 1:
 
 ##############################################
 
+hordex=[]
+hordey=[]
+
+def isfree(x,y,dx=0,dy=0):
+    global M
+    nurgad=((x,y),(x+19,y),(x,y+19),(x+19,y+19))
+    for i in nurgad:
+        if i[0]+dx<0 or i[0]+dx>=mapsize*40 or M[(i[0]+dx)//40][i[1]//40]!=2:
+            return False
+        if i[1]+dy<0 or i[1]+dy>=mapsize*40 or M[i[0]//40][(i[1]+dy)//40]!=2:
+            return False
+    return True
+
+def spawn():
+    global hordex
+    global hordey
+    global M
+    while 1:
+        t1=randint(0,mapsize-1)
+        t2=randint(0,mapsize-1)
+        if M[t1][t2]==2:
+            hordex.append(t1*40)
+            hordey.append(t2*40)
+            return
+
+for i in range(100):
+    spawn()
+
 while True:
 
     clock.tick(FPS)
@@ -207,18 +236,18 @@ while True:
             dx=0
         if event.key==K_a:
             dx=0
-    nurgad=((x,y),(x+19,y),(x,y+19),(x+19,y+19))
-    xok=1
-    yok=1
-    for i in nurgad:
-        if i[0]+dx<0 or i[0]+dx>=mapsize*40 or M[(i[0]+dx)//40][i[1]//40]!=2:
-            xok=0
-        if i[1]+dy<0 or i[1]+dy>=mapsize*40 or M[i[0]//40][(i[1]+dy)//40]!=2:
-            yok=0
-    if xok==1:
+    if isfree(x,y,dx,0):
         x+=dx
-    if yok==1:
+    if isfree(x,y,0,dy):
         y+=dy
+    #AI
+    for i in range(len(hordex)):
+        zx=randint(-1,1)
+        zy=randint(-1,1)
+        if isfree(hordex[i],hordey[i],zx,0):
+            hordex[i]+=zx
+        if isfree(hordex[i],hordey[i],0,zy):
+            hordey[i]+=zy
     #tulemuse kuvamine
     screen.fill((0,0,0))
     for i in range(15):
@@ -227,8 +256,11 @@ while True:
             for j in range(15):
                 b=y//40-7+j
                 if b>=0 and b<mapsize and M[a][b]==2:
-                    screen.blit(tile,(i*40-x%40+30,j*40-y%40+30))
-    screen.blit(tile2,(310,310))
+                    screen.blit(tile,(i*40-x%40+10,j*40-y%40+10))
+    screen.blit(tile2,(290,290))
+    for i in range(len(hordex)):
+        if hordex[i]>x-300 and hordex[i]<x+300 and hordey[i]>y-300 and hordey[i]<y+300:
+            screen.blit(tile3,(hordex[i]-x+300-10,hordey[i]-y+300-10))
     screen.fill((0,0,0),(0,0,40,600))
     screen.fill((0,0,0),(0,0,600,40))
     screen.fill((0,0,0),(560,0,40,600))
