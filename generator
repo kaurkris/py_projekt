@@ -16,6 +16,18 @@ FPS=120
 tile=pygame.image.load("Floor-Tile-1.png")
 tile2=pygame.image.load("Standing-MC-2.png")
 tile3=pygame.image.load("Zombo-Standing-1.png")
+run=[pygame.image.load("Running-MC-1.png"),
+     pygame.image.load("Running-MC-2.png"),
+     pygame.image.load("Running-MC-3.png"),
+     pygame.image.load("Running-MC-4.png"),
+     pygame.image.load("Running-MC-5.png"),
+     pygame.image.load("Running-MC-6.png")]
+zrun=[pygame.image.load("Zombo-Running-1.png"),
+      pygame.image.load("Zombo-Running-2.png"),
+      pygame.image.load("Zombo-Running-3.png"),
+      pygame.image.load("Zombo-Running-4.png"),
+      pygame.image.load("Zombo-Running-5.png"),
+      pygame.image.load("Zombo-Running-6.png")]
 
 ###################################
 #Wilson
@@ -196,10 +208,19 @@ def isfree(x,y,dx=0,dy=0):
             return False
     return True
 
+moved=-100
+zmoved=[]
+v=[0,0,0,0]
+zv=[]
+
 def spawn():
     global hordex
     global hordey
+    global zmoved
+    global zv
     global M
+    zmoved.append(-1)
+    zv.append([0,0,0,0])
     while 1:
         t1=randint(0,mapsize-1)
         t2=randint(0,mapsize-1)
@@ -211,6 +232,31 @@ def spawn():
 for i in range(100):
     spawn()
 
+def direction(v):
+    #v=NESW
+    if v[0]==1 and v[1]==1:
+        return 45
+    if v[2]==1 and v[1]==1:
+        return 135
+    if v[2]==1 and v[3]==1:
+        return 225
+    if v[0]==1 and v[3]==1:
+        return 315
+    if v[1]==1:
+        return 90
+    if v[2]==1:
+        return 180
+    if v[3]==1:
+        return 270
+    return 0
+
+def kill(x,y,hordex,hordey):
+    for i in range(len(hordex)-1):
+        if abs(x-hordex[i])<20 and abs(y-hordey[i])<20:
+            return True
+    return False
+        
+
 while True:
 
     clock.tick(FPS)
@@ -221,34 +267,83 @@ while True:
     if event.type == pygame.KEYDOWN:
         if event.key==K_w:
             dy=-1
+            v[0]=1
+            v[2]=0
         if event.key==K_s:
             dy=1
+            v[2]=1
+            v[0]=0
         if event.key==K_d:
             dx=1
+            v[1]=0
+            v[3]=1
         if event.key==K_a:
             dx=-1
+            v[3]=0
+            v[1]=1
     if event.type == pygame.KEYUP:
         if event.key==K_w:
             dy=0
+            v[0]=0
         if event.key==K_s:
             dy=0
+            v[2]=0
         if event.key==K_d:
             dx=0
+            v[3]=0
         if event.key==K_a:
             dx=0
+            v[1]=0
+    horse=0
     if isfree(x,y,dx,0):
         x+=dx
+        if dx!=0:
+            horse=1
     if isfree(x,y,0,dy):
         y+=dy
+        if dy!=0:
+            horse=1
+    if horse==1:
+        moved+=1
+    else:
+        moved=-10
     #AI
     for i in range(len(hordex)):
         zx=randint(-1,1)
+        if zx==1:
+            zv[i][1]=1
+            zv[i][3]=0
+        if zx==-1:
+            zv[i][3]=0
+            zv[i][1]=1
+        if zx==0:
+            zv[i][3]=0
+            zv[i][1]=0
         zy=randint(-1,1)
+        if zy==1:
+            zv[i][2]=1
+            zv[i][0]=0
+        if zx==-1:
+            zv[i][2]=0
+            zv[i][0]=1
+        if zy==0:
+            zv[i][2]=0
+            zv[i][0]=0
+        horse=0
         if isfree(hordex[i],hordey[i],zx,0):
             hordex[i]+=zx
+            if zx!=0:
+                horse=1
         if isfree(hordex[i],hordey[i],0,zy):
             hordey[i]+=zy
+            if zy!=0:
+                horse=1
+        if horse==1:
+            zmoved[i]+=1
+        else:
+            zmoved[i]=-10
     #tulemuse kuvamine
+    #map
     screen.fill((0,0,0))
     for i in range(15):
         a=x//40-7+i
@@ -257,14 +352,24 @@ while True:
                 b=y//40-7+j
                 if b>=0 and b<mapsize and M[a][b]==2:
                     screen.blit(tile,(i*40-x%40+10,j*40-y%40+10))
-    screen.blit(tile2,(290,290))
+    #tegelane
+    if moved<0:
+        screen.blit(tile2,(290,290))
+    else:
+        screen.blit(pygame.transform.rotate(run[(moved//10)%6],direction(v)),(290,290))
+    #zombied
     for i in range(len(hordex)):
         if hordex[i]>x-300 and hordex[i]<x+300 and hordey[i]>y-300 and hordey[i]<y+300:
-            screen.blit(tile3,(hordex[i]-x+300-10,hordey[i]-y+300-10))
+            if zmoved[i]<0:
+                screen.blit(tile3,(hordex[i]-x+300-10,hordey[i]-y+300-10))
+            else:
+                screen.blit(pygame.transform.rotate(zrun[(zmoved[i]//10)%6],direction(zv[i])),(hordex[i]-x+300-10,hordey[i]-y+300-10))
     screen.fill((0,0,0),(0,0,40,600))
     screen.fill((0,0,0),(0,0,600,40))
     screen.fill((0,0,0),(560,0,40,600))
     screen.fill((0,0,0),(0,560,600,40))
+    if kill(x,y,hordex,hordey):
+        screen.fill((255,0,0))
     pygame.display.flip()
     
 pygame.quit()
